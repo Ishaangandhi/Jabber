@@ -15,9 +15,18 @@ def translate(s, language):
     if not language:
         return s
     else:
-        payload = {'q': s, 'target': language, 'key': API_KEY}
+        payload = {'q': s, 'target': language, 'key': API_KEY, 'format': 'html'}
         r = requests.post("https://translation.googleapis.com/language/translate/v2", params=payload)
         return html.unescape(json.loads(r.text)["data"]["translations"][0]["translatedText"])
+
+
+def format_error(e):
+    e = e.replace('<p>', '\n')
+    e = e.replace('<br>', '\n')
+    e = e.replace('</p>', '')
+    e = e.replace('<pre> <code>', '>>>>>>>> CODE >>>>>>>> \n')
+    e = e.replace('</code> </pre>', '\n <<<<<<<< CODE <<<<<<<< \n')
+    return e
 
 
 def getStackOverflowAnswer(query):
@@ -63,13 +72,19 @@ def static_analysis(filename, language=None):
     else:
         p = p.splitlines()
         line_numbers = []
+        offset = 0
         for i, line in enumerate(p):
             line = line.split()
             error_file = line[0].split(':')
             error_line = int(error_file[1])
-            error = translate(' '.join(line[2:]), language)
-            line_numbers.append(str(error_line+3*i))
-            insert_error(error_line+3*i, error, filename)
+            error = ' '.join(line[2:])
+            error = error + "\nStackoverflow:\n" + getStackOverflowAnswer("python " + error)
+            error = error.replace("\n", "<br>")
+            error = translate(error, language)
+            error = format_error(error)
+            line_numbers.append(str(error_line+offset))
+            insert_error(error_line+offset, error, filename)
+            offset+=3+error.count('\n')
         print(colored("error lines: ", 'red') + ' '.join(line_numbers))
 
 
