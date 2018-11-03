@@ -2,7 +2,30 @@ import traceback
 import os
 from termcolor import colored
 import sys
+import requests
 
+
+def getStackOverflowAnswer(query):
+    cse_url = "https://www.googleapis.com/customsearch/v1?cx=011944706024575323675:_py65c8dw6e&q=" + query + "&key=AIzaSyCh0MRGhTXwyAX270l_f6nIWZPVORgwibY"
+    # Make a Google CSE Search
+    results = requests.get(cse_url)
+    firstResult = results.json()['items'][0]
+    link = firstResult['link']
+    splitLink = link.split("/")
+    questionId = splitLink[4]
+
+    stackOverFlowLink = "https://api.stackexchange.com/2.2/questions/" + questionId + "/answers?site=stackoverflow&key=RKKAKKosLuCpQGsWMoMVFw((&filter=withbody"
+    # Stack Overflow Search
+    stackResults = requests.get(stackOverFlowLink)
+    bodyHtml = stackResults.json()["items"][0]["body"]
+
+    if (bodyHtml == "" or bodyHtml is None):
+        print("No Body Gotten! Here is google result:")
+        print(str(results.json()).encode("utf-8"))
+        print("Stack OverFlow:")
+        print(str(stackResults.json()).encode("utf-8"))
+
+    return bodyHtml
 
 def insert_error(line, error, filename):
     f = open(filename, "r")
