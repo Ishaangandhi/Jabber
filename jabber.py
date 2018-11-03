@@ -1,3 +1,5 @@
+# encoding=utf8
+
 import traceback
 import os
 from termcolor import colored
@@ -6,9 +8,8 @@ import requests
 import json
 import html
 from languages import lang_to_code
-
-
 API_KEY = "AIzaSyA-e4wLSu-is3uq-QFCqu0lGIx6e8IrlC8"
+
 
 def translate(s, language):
     if not language:
@@ -39,13 +40,16 @@ def static_analysis(filename, language=None):
         print(colored("No errors found.", 'green'))
     else:
         p = p.splitlines()
+        line_numbers = []
         for i, line in enumerate(p):
             line = line.split()
             error_file = line[0].split(':')
             error_line = int(error_file[1])
             error = translate(' '.join(line[2:]), language)
-            print("line: " + str(error_line) + ", " + colored("error: ", 'red') + str(error))
+            line_numbers.append(str(error_line+3*i))
             insert_error(error_line+3*i, error, filename)
+        print(colored("error lines: ", 'red') + ' '.join(line_numbers))
+
 
 
 def run_program():
